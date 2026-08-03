@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>用C写一个HTTP服务器是什么体验 — YG Blog</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="../index.html" class="logo">YG</a>
+    <div class="nav-links">
+      <a href="../index.html">首页</a>
+      <a href="../projects/index.html">项目</a>
+      <a href="index.html">文章</a>
+    </div>
+  </div>
+</nav>
+
+<main class="container post">
+  <h1>用C写一个HTTP服务器是什么体验</h1>
+  <p class="date">2026-07-15 · 约5分钟</p>
+
+  <h2>起因</h2>
+  <p>
+    这学期上计网，TCP三次握手四次挥手背得滚瓜烂熟，但除了用浏览器发HTTP请求之外从没真的写过socket代码。
+    期末考完后就想试试——如果让我从零写一个能跑起来的HTTP服务器，会怎样？
+  </p>
+
+  <h2>第一阶段: Hello TCP</h2>
+  <p>先写个最简单的echo server。照着CSAPP第11章的代码抄了一遍:</p>
+  <pre><code>int listenfd = socket(AF_INET, SOCK_STREAM, 0);
+bind(listenfd, (struct sockaddr*)&addr, sizeof(addr));
+listen(listenfd, 10);
+int connfd = accept(listenfd, NULL, NULL);</code></pre>
+  <p>跑起来后拿浏览器访问localhost:8080……什么都没有。原来浏览器发的是HTTP请求，我回的是纯文本"hello"，它不认识。</p>
+
+  <h2>第二阶段: 解析HTTP</h2>
+  <p>浏览器发的第一行大概是这样的:</p>
+  <pre><code>GET /index.html HTTP/1.1\r\n</code></pre>
+  <p>所以要解析出来方法(GET)、路径(/index.html)、版本(1.1)。</p>
+  <p>然后是headers，每行都是<code>Key: Value\r\n</code>格式，直到空行<code>\r\n\r\n</code>分隔headers和body。</p>
+  <p>我在http.c里写了一个状态机式的解析器——逐行读，到空行就停。解析完了构造响应报文，格式跟请求差不多。这步搞了两天。</p>
+
+  <h2>第三阶段: 多线程</h2>
+  <p>单线程跑通后兴高采烈地用浏览器测试……卡住了。排查了半天发现Chrome会同时发两个请求(主页+ favicon.ico)，而我单线程的accept循环一次只能处理一个。</p>
+  <p>解决方案: 每个连接创建一个线程:</p>
+  <pre><code>pthread_t tid;
+pthread_create(&tid, NULL, handle_client, arg);
+pthread_detach(tid);</code></pre>
+  <p>但这有个问题: 请求多了线程数爆炸（虽然pthread_detach会自动回收，但创建/销毁开销很大）。</p>
+
+  <h2>第四阶段: 线程池</h2>
+  <p>看了生产者-消费者模型，写了个简易线程池:</p>
+  <pre><code>typedef struct {
+    pthread_t workers[8];
+    task_t queue[64];
+    int front, rear, count;
+    pthread_mutex_t lock;
+    pthread_cond_t not_empty;
+    pthread_cond_t not_full;
+} threadpool_t;</code></pre>
+  <p>主线程accept后把fd扔进队列，worker线程从队列取任务处理。关键是用mutex+cond保证线程安全。</p>
+  <p>这里踩的最大坑是<code>pthread_cond_wait</code>的虚假唤醒——文档说wait可能在没有signal的情况下返回，所以必须用while而不是if来检查条件。</p>
+
+  <h2>总结</h2>
+  <ul>
+    <li>socket编程比课上讲的复杂——SO_REUSEADDR、send不一定发完、网络字节序……都是书上不提但实际会遇到的</li>
+    <li>HTTP协议本身的解析不复杂，繁琐的是各种错误处理和边界条件</li>
+    <li>线程池比想象的简单，核心就是mutex+cond的生产者-消费者模型</li>
+    <li>C语言写网络程序的最大痛点是内存管理，忘记一个free就内存泄漏</li>
+  </ul>
+  <p>代码在 <a href="https://github.com/KimserUM/mini-http-server">github.com/KimserUM/mini-http-server</a></p>
+</main>
+
+<footer>
+  <p>&copy; 2026 杨光裕 · Powered by plain HTML/CSS</p>
+</footer>
+</body>
+</html>

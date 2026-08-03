@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>项目 · Yang Guangyu</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="../index.html" class="logo">YG</a>
+    <div class="nav-links">
+      <a href="../index.html">首页</a>
+      <a href="index.html">项目</a>
+      <a href="../posts/index.html">文章</a>
+    </div>
+  </div>
+</nav>
+
+<main class="container post">
+  <h1>项目</h1>
+  <p class="subtitle">考研复试准备期间做的一些项目</p>
+
+  <section class="section" style="margin-top:30px">
+
+    <div class="card">
+      <h3>mini-http-server</h3>
+      <span class="tag">C</span> <span class="tag">socket</span> <span class="tag">pthread</span>
+      <span class="tag">线程池</span>
+      <p>从零手写的HTTP服务器。用C语言实现了TCP监听、HTTP请求解析、路由分发、
+         静态文件服务、线程池、Keep-Alive等功能。</p>
+      <p>写这个项目的起因是计网课学了TCP/IP但从来没写过socket代码。
+         踩了不少坑: 端口复用、浏览器双重请求、pthread_detach内存泄漏...</p>
+      <p>
+        <a href="https://github.com/KimserUM/mini-http-server">GitHub</a>
+        &nbsp;·&nbsp; <a href="mini-http.html">详情</a>
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>mini-kvstore</h3>
+      <span class="tag">Python</span> <span class="tag">Raft</span>
+      <span class="tag">分布式</span> <span class="tag">WAL</span>
+      <p>分布式KV存储引擎。基于Raft共识算法实现了Leader选举和Log复制。
+         存储层用WAL(预写日志)+快照保证持久化，网络层用自定义TCP协议通信。</p>
+      <p>写的时候最大的感受: 分布式系统的难点不在算法本身(论文才10页)，
+         而在各种边界条件——term检测、选举分裂、日志冲突。</p>
+      <p>
+        <a href="https://github.com/KimserUM/mini-kvstore">GitHub</a>
+        &nbsp;·&nbsp; <a href="mini-kvstore.html">详情</a>
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>mini-sql</h3>
+      <span class="tag">Python</span> <span class="tag">编译原理</span>
+      <span class="tag">SQL</span>
+      <p>手写SQL解析器和执行引擎。包括: 手写状态机做词法分析、
+         递归下降parser构建AST、内存表执行引擎。</p>
+      <p>支持SELECT/INSERT/CREATE/DELETE + WHERE + ORDER BY + LIMIT。
+         做这个的时候顺便复习了编译原理(原来是这么回事)。</p>
+      <p>
+        <a href="https://github.com/KimserUM/mini-sql">GitHub</a>
+        &nbsp;·&nbsp; <a href="mini-sql.html">详情</a>
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>cv-toolkit</h3>
+      <span class="tag">OpenCV</span> <span class="tag">KNN</span>
+      <span class="tag">HOG</span>
+      <p>图像处理工具集。OpenCV链式调用(灰度化/滤波/边缘检测/形态学)
+         再加上纯numpy实现的KNN分类器。</p>
+      <p>延续了之前的CV论文方向，把课本上学的图像处理算法都亲手实现了一遍。</p>
+      <p>
+        <a href="https://github.com/KimserUM/cv-toolkit">GitHub</a>
+        &nbsp;·&nbsp; <a href="cv-toolkit.html">详情</a>
+      </p>
+    </div>
+
+  </section>
+</main>
+
+<footer>
+  <p>&copy; 2026 杨光裕 · Powered by plain HTML/CSS</p>
+</footer>
+
+</body>
+</html>
