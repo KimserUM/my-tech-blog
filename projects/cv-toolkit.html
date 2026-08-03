@@ -1,39 +1,50 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>cv-toolkit — Projects</title>
+<title>cv-toolkit — 项目</title>
 <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
 <div class="screen-dust"></div>
 <div class="desk-surface"></div>
 <div class="page-nav">
-  <a href="../index.html">Desk</a>
-  <a href="index.html">Projects</a>
-  <a href="../posts/index.html">Posts</a>
-  <a href="../about.html">About</a>
+  <a href="../index.html">桌面</a>
+  <a href="index.html">项目</a>
+  <a href="../posts/index.html">文章</a>
+  <a href="../about.html">关于</a>
 </div>
 <div class="page-container">
-  <a href="../index.html" class="back-to-desk">Back to Desk</a>
+  <a href="../index.html" class="back-to-desk">返回桌面</a>
   <div class="page-paper">
     <h1>cv-toolkit</h1>
-    <p class="page-meta">Python | OpenCV | numpy | KNN | HOG | ~500 lines | 2026.08</p>
-    <h2>What it does</h2>
-    <p>Image processor with chainable OpenCV operations, plus a KNN classifier built from scratch with numpy.</p>
-    <h2>Image processor</h2>
+    <p class="page-meta">Python | OpenCV | numpy | KNN | HOG | ~500行 | 2026.08</p>
+
+    <h2>项目简介</h2>
+    <p>两个模块: 图像处理器(OpenCV 链式调用)和 KNN 图像分类器(纯 numpy 手写)。延续了之前的计算机视觉期末论文方向，把课本上的 CV 算法亲手实现一遍。</p>
+
+    <h2>模块一: 图像处理器</h2>
+    <p>链式调用接口。每个方法返回 self，可以一行写完整个处理流水线:</p>
     <pre><code>proc = ImgProcessor("photo.jpg")
 proc.to_gray().gaussian_blur(5).canny(50, 150).save("edge.jpg")</code></pre>
-    <p>Operations: grayscale, OTSU binary, Gaussian/median blur, Canny/Sobel, histogram equalization, erode/dilate/open/close, resize, rotate. Undo stack.</p>
-    <h2>Classifier: feature extraction</h2>
-    <p>Color histogram: 32-bin per RGB channel, 96-d vector. HOG: hand-implemented, Sobel gradients, 8x8 cells, 9-bin orientation weighted by magnitude, L2 normalization.</p>
-    <h2>Classifier: KNN</h2>
-    <p>Brute-force Euclidean distance. Sort, top K, majority vote. K forced odd.</p>
+    <p>支持操作: 灰度化、OTSU 二值化、高斯/中值滤波、Canny/Sobel 边缘检测、直方图均衡化、腐蚀/膨胀/开/闭运算、缩放、旋转。可撤销(操作历史栈)。</p>
+
+    <h2>模块二: 图像分类器</h2>
+
+    <h3>特征提取</h3>
+    <p><strong>颜色直方图:</strong> 每个 RGB 通道 32 bin，归一化后拼接成 96 维向量。不受图片尺寸影响。</p>
+    <p><strong>HOG 特征:</strong> 手写实现(参考 Dalal & Triggs 2005)。步骤: Sobel 算子计算梯度 -> 8x8 像素 cell -> 按梯度方向(9个 bin)和大小加权投票 -> L2 归一化。</p>
+
+    <h3>KNN 分类器</h3>
+    <p>暴力欧氏距离。计算到所有训练样本的距离，排序，取前 K 个，多数投票。K 强制奇数(避免平局)。</p>
     <pre><code>knn = KNNClassifier(k=5)
 knn.fit(train_features, train_labels)
 accuracy = knn.evaluate(test_features, test_labels)</code></pre>
-    <p><a href="https://github.com/KimserUM/cv-toolkit">Source on GitHub</a></p>
+
+    <p>在合成数据上测试(红/蓝/绿色调各20张，加噪声)，颜色直方图特征 + KNN 达到 100% 准确率。</p>
+
+    <p>源代码: <a href="https://github.com/KimserUM/cv-toolkit">github.com/KimserUM/cv-toolkit</a></p>
   </div>
 </div>
 <button id="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">TOP</button>

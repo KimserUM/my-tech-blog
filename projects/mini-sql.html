@@ -1,50 +1,64 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>mini-sql — Projects</title>
+<title>mini-sql — 项目</title>
 <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
 <div class="screen-dust"></div>
 <div class="desk-surface"></div>
 <div class="page-nav">
-  <a href="../index.html">Desk</a>
-  <a href="index.html">Projects</a>
-  <a href="../posts/index.html">Posts</a>
-  <a href="../about.html">About</a>
+  <a href="../index.html">桌面</a>
+  <a href="index.html">项目</a>
+  <a href="../posts/index.html">文章</a>
+  <a href="../about.html">关于</a>
 </div>
 <div class="page-container">
-  <a href="../index.html" class="back-to-desk">Back to Desk</a>
+  <a href="../index.html" class="back-to-desk">返回桌面</a>
   <div class="page-paper">
     <h1>mini-sql</h1>
-    <p class="page-meta">Python | tokenizer | recursive descent parser | engine | ~1100 lines | 2026.07-08</p>
-    <h2>What it does</h2>
-    <p>A SQL database engine: lexer converts SQL to tokens, parser builds an AST, engine executes on in-memory tables.</p>
-    <h2>Pipeline</h2>
-    <pre><code>SQL -> Tokenizer (hand-written FSM) -> Parser (recursive descent)
-    -> AST -> Engine (tree-walk) -> Result</code></pre>
-    <h2>Tokenizer</h2>
-    <p>Hand-written FSM. States: whitespace, number, word (keyword table lookup), string, operator. Comments (--) skipped.</p>
-    <h2>Parser</h2>
-    <p>Recursive descent. Operator precedence via call hierarchy:</p>
+    <p class="page-meta">Python | 词法分析 | 递归下降解析 | 执行引擎 | ~1100行 | 2026.07-08</p>
+
+    <h2>项目简介</h2>
+    <p>手写 SQL 解析器和执行引擎。三阶段流水线: 词法分析器将 SQL 文本转为 Token 序列，递归下降解析器构建 AST，执行引擎在内存表中执行 AST。顺便把编译原理复习了一遍。</p>
+
+    <h2>流水线 / Pipeline</h2>
+    <pre><code>SQL 文本
+  -> Tokenizer (手写状态机)
+  -> Token 序列
+  -> Parser (递归下降)
+  -> AST 抽象语法树
+  -> Engine (树遍历求值)
+  -> 结果</code></pre>
+
+    <h2>第一阶段: 词法分析</h2>
+    <p>手写有限状态机。状态: 空白(跳过)、数字(连续读取)、单词(读完后查关键字表)、字符串(单引号包围)、操作符(单/双字符)。注释(--)跳过。</p>
+
+    <h2>第二阶段: 语法分析</h2>
+    <p>递归下降。每个语法规则对应一个解析函数。运算符优先级通过函数调用层次实现:</p>
     <pre><code>parse_expr -> parse_or -> parse_and -> parse_cmp -> parse_atom</code></pre>
-    <h2>Engine</h2>
-    <p>Tables as dict of dicts. WHERE walks AST: ColumnRef gets row value, Literal returns constant, BinaryOp recurses then applies operator. ORDER BY uses (type_group, value) tuples for safe comparison. Type conversion at INSERT time.</p>
-    <h2>Supported SQL</h2>
+    <p>parse_or 调用 parse_and，在 OR 上循环。parse_and 调用 parse_cmp，在 AND 上循环。优先级自然正确，不需要显式的优先级表。</p>
+
+    <h2>第三阶段: 执行引擎</h2>
+    <p>表数据: dict of dicts(每行一个 dict)。WHERE 求值递归遍历 AST 节点，ColumnRef 从当前行取值，BinaryOp 左右子树求值后运算。ORDER BY 用 (type_priority, value) 元组包装排序键，解决不同类型比较时 TypeError 的问题。</p>
+
+    <h2>支持的 SQL</h2>
     <pre><code>CREATE TABLE users (id INT, name STRING, age INT);
-INSERT INTO users VALUES (1, 'tom', 20);
+INSERT INTO users (id, name, age) VALUES (1, 'tom', 20);
 SELECT * FROM users WHERE age >= 20;
 SELECT name FROM users ORDER BY age DESC LIMIT 5;
 DELETE FROM users WHERE id = 3;</code></pre>
-    <h2>Problems</h2>
+
+    <h2>踩坑</h2>
     <ul>
-      <li>Regex tokenizer broke on string commas, replaced with FSM</li>
-      <li>AND/OR precedence wrong, split into parse_or/parse_and</li>
-      <li>NULL in ORDER BY: (type_group, value) tuple sort keys</li>
+      <li>正则 tokenizer 在字符串里的逗号上翻车，换手写状态机</li>
+      <li>AND/OR 优先级: 一开始当同级处理导致语义错误，拆成 parse_or/parse_and</li>
+      <li>ORDER BY + NULL: 不同类型直接比较会 TypeError，用(type_group, value)解决</li>
     </ul>
-    <p><a href="https://github.com/KimserUM/mini-sql">Source on GitHub</a></p>
+
+    <p>源代码: <a href="https://github.com/KimserUM/mini-sql">github.com/KimserUM/mini-sql</a></p>
   </div>
 </div>
 <button id="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">TOP</button>

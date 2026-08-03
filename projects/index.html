@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Projects — Yang Guangyu</title>
+<title>项目 — 杨光裕</title>
 <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
@@ -11,53 +11,61 @@
 <div class="desk-surface"></div>
 
 <div class="page-nav">
-  <a href="../index.html">Desk</a>
-  <a href="index.html" class="active">Projects</a>
-  <a href="../posts/index.html">Posts</a>
-  <a href="../about.html">About</a>
+  <a href="../index.html">桌面</a>
+  <a href="index.html" class="active">项目</a>
+  <a href="../posts/index.html">文章</a>
+  <a href="../about.html">关于</a>
 </div>
 
 <div class="page-container">
-  <a href="../index.html" class="back-to-desk">Back to Desk</a>
+  <a href="../index.html" class="back-to-desk">返回桌面</a>
 
   <div class="page-paper">
-    <h1>Projects</h1>
-    <p class="page-meta">6 projects from 2026 graduate school interview preparation</p>
+    <h1>项目 / Projects</h1>
+    <p class="page-meta">2026 年考研复试准备的六个项目</p>
 
-    <p>All projects migrated from previous GitHub account on 2026-08-03.</p>
+    <p>以下项目均从旧 GitHub 账号于 2026-08-03 迁移至当前账号。实际开发跨度约两个月(6月中旬-8月初)。</p>
 
     <div style="margin-top:24px">
-      <a href="mini-http.html" class="project-item" style="display:block;margin-bottom:18px">
-        <span class="p-name">mini-http-server</span>
-        <span class="p-meta">C &middot; socket &middot; pthread &middot; thread pool &middot; ~1200 lines &middot; 2026.06-07</span>
+      <div style="margin-bottom:24px">
+        <a href="mini-http.html" style="text-decoration:none;color:inherit">
+          <span class="p-name" style="font-size:0.95rem">mini-http-server</span>
+        </a>
+        <p class="p-meta">C 语言 &middot; socket &middot; pthread &middot; 线程池 &middot; ~1200行 &middot; 2026.06-07</p>
         <p style="font-size:0.75rem;color:var(--ink-light);margin-top:4px;line-height:1.5">
-          HTTP/1.1 server from scratch: TCP socket listener, HTTP request parser, thread pool for concurrency, static file serving, Keep-Alive support, file upload endpoint.
+          从零实现的 HTTP/1.1 服务器。TCP 监听、HTTP 请求解析、线程池并发、静态文件服务、Keep-Alive 支持、文件上传接口。搭配计算机网络和操作系统知识点复习。
         </p>
-      </a>
+      </div>
 
-      <a href="mini-kvstore.html" class="project-item" style="display:block;margin-bottom:18px">
-        <span class="p-name">mini-kvstore</span>
-        <span class="p-meta">Python &middot; Raft &middot; WAL &middot; TCP &middot; ~1500 lines &middot; 2026.07</span>
+      <div style="margin-bottom:24px">
+        <a href="mini-kvstore.html" style="text-decoration:none;color:inherit">
+          <span class="p-name" style="font-size:0.95rem">mini-kvstore</span>
+        </a>
+        <p class="p-meta">Python &middot; Raft 共识 &middot; WAL &middot; TCP &middot; ~1500行 &middot; 2026.07</p>
         <p style="font-size:0.75rem;color:var(--ink-light);margin-top:4px;line-height:1.5">
-          Distributed key-value store with Raft consensus: leader election, log replication, WAL persistence, snapshot compaction, custom binary TCP protocol.
+          分布式 KV 存储引擎。基于 Raft 算法实现 Leader 选举和日志复制。WAL 持久化 + 快照压缩保证数据安全。自定义 TCP 协议帧用于节点间通信。
         </p>
-      </a>
+      </div>
 
-      <a href="mini-sql.html" class="project-item" style="display:block;margin-bottom:18px">
-        <span class="p-name">mini-sql</span>
-        <span class="p-meta">Python &middot; tokenizer &middot; recursive descent &middot; engine &middot; ~1100 lines &middot; 2026.07-08</span>
+      <div style="margin-bottom:24px">
+        <a href="mini-sql.html" style="text-decoration:none;color:inherit">
+          <span class="p-name" style="font-size:0.95rem">mini-sql</span>
+        </a>
+        <p class="p-meta">Python &middot; 词法分析 &middot; 递归下降 &middot; 执行引擎 &middot; ~1100行 &middot; 2026.07-08</p>
         <p style="font-size:0.75rem;color:var(--ink-light);margin-top:4px;line-height:1.5">
-          SQL lexer, recursive descent parser, and in-memory execution engine. Supports SELECT, INSERT, CREATE, DELETE with WHERE, ORDER BY, LIMIT.
+          手写 SQL 解析器和执行引擎。手写状态机做词法分析、递归下降 parser 构建 AST、内存表执行引擎。支持 SELECT/INSERT/CREATE/DELETE + WHERE + ORDER BY + LIMIT。
         </p>
-      </a>
+      </div>
 
-      <a href="cv-toolkit.html" class="project-item" style="display:block;margin-bottom:18px">
-        <span class="p-name">cv-toolkit</span>
-        <span class="p-meta">OpenCV &middot; numpy &middot; KNN &middot; HOG &middot; ~500 lines &middot; 2026.08</span>
+      <div style="margin-bottom:24px">
+        <a href="cv-toolkit.html" style="text-decoration:none;color:inherit">
+          <span class="p-name" style="font-size:0.95rem">cv-toolkit</span>
+        </a>
+        <p class="p-meta">OpenCV &middot; numpy &middot; KNN &middot; HOG &middot; ~500行 &middot; 2026.08</p>
         <p style="font-size:0.75rem;color:var(--ink-light);margin-top:4px;line-height:1.5">
-          Image processor with chainable OpenCV operations plus a from-scratch KNN classifier using color histograms and HOG features.
+          图像处理工具集 + 纯 numpy 实现的 KNN 分类器。OpenCV 链式调用(灰度化/滤波/边缘检测/形态学)，手写 HOG 特征提取，KNN 分类器。
         </p>
-      </a>
+      </div>
     </div>
   </div>
 </div>

@@ -1,35 +1,40 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>mini-http-server — Projects</title>
+<title>mini-http-server — 项目</title>
 <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
 <div class="screen-dust"></div>
 <div class="desk-surface"></div>
 <div class="page-nav">
-  <a href="../index.html">Desk</a>
-  <a href="index.html">Projects</a>
-  <a href="../posts/index.html">Posts</a>
-  <a href="../about.html">About</a>
+  <a href="../index.html">桌面</a>
+  <a href="index.html">项目</a>
+  <a href="../posts/index.html">文章</a>
+  <a href="../about.html">关于</a>
 </div>
 <div class="page-container">
-  <a href="../index.html" class="back-to-desk">Back to Desk</a>
+  <a href="../index.html" class="back-to-desk">返回桌面</a>
   <div class="page-paper">
     <h1>mini-http-server</h1>
-    <p class="page-meta">C | socket | pthread | thread pool | ~1200 lines | 2026.06-07</p>
-    <h2>What it does</h2>
-    <p>A from-scratch HTTP/1.1 server written in C. Listens on a TCP port, parses HTTP requests, serves static files, and exposes JSON API endpoints.</p>
-    <h2>Architecture</h2>
-    <pre><code>main.c        - entry point, signal handling
-server.c      - TCP socket, thread pool dispatch
-http.c        - HTTP request parsing, response building
-threadpool.c  - producer-consumer thread pool (mutex + cond)</code></pre>
-    <h2>HTTP parsing</h2>
-    <p>Manual state machine. First line parsed with sscanf. Headers split on colon. Body separated by double CRLF. Content-Length for body size.</p>
-    <h2>Thread pool</h2>
+    <p class="page-meta">C 语言 | socket | pthread | 线程池 | ~1200行 | 2026.06-07</p>
+
+    <h2>项目简介</h2>
+    <p>用 C 语言从零实现的 HTTP/1.1 服务器。监听 TCP 端口，解析 HTTP 请求，提供静态文件服务和几个 JSON API 接口。写这个项目是为了把计网课上学到的 TCP/IP、HTTP 协议真正用代码实现一遍。</p>
+
+    <h2>架构 / Architecture</h2>
+    <pre><code>main.c        - 入口，信号处理
+server.c      - TCP socket 监听，线程池分发
+http.c        - HTTP 请求解析，响应构造
+threadpool.c  - 生产者-消费者线程池 (mutex + cond)</code></pre>
+
+    <h2>HTTP 解析</h2>
+    <p>手写状态机解析 HTTP 报文。第一行用 sscanf 提取方法、路径、版本。headers 按冒号切割，body 通过 Content-Length 确定长度，\r\n\r\n 分隔 headers 和 body。</p>
+
+    <h2>线程池</h2>
+    <p>生产者-消费者模型 + 循环队列。主线程(生产者) accept 之后把 fd 丢进队列，worker 线程(消费者)取任务处理。</p>
     <pre><code>typedef struct {
     pthread_t workers[8];
     task_t    queue[64];
@@ -38,24 +43,28 @@ threadpool.c  - producer-consumer thread pool (mutex + cond)</code></pre>
     pthread_cond_t  not_empty, not_full;
     int       running;
 } threadpool_t;</code></pre>
-    <h2>Keep-Alive</h2>
-    <p>Connection: keep-alive keeps socket open for multiple requests (max 50 per connection).</p>
-    <h2>API endpoints</h2>
+
+    <h2>Keep-Alive 长连接</h2>
+    <p>如果客户端发来 Connection: keep-alive，同一个 socket 可以处理多个请求（最多 50 个）。Connection: close 标记最后一个响应。</p>
+
+    <h2>API 接口</h2>
     <ul>
-      <li>GET /api/time — server timestamp</li>
-      <li>GET /api/stats — thread pool status</li>
-      <li>POST /api/echo — echo POST body</li>
-      <li>POST /api/upload — multipart file upload</li>
+      <li>GET /api/time — 服务器时间戳</li>
+      <li>GET /api/stats — 线程池状态</li>
+      <li>POST /api/echo — 回显 POST 数据</li>
+      <li>POST /api/upload — multipart/form-data 文件上传</li>
     </ul>
-    <h2>Problems</h2>
+
+    <h2>踩坑记录</h2>
     <ul>
-      <li>SO_REUSEADDR for port reuse on restart</li>
-      <li>Chrome double-request (favicon) deadlocked single thread</li>
-      <li>send() partial writes need loops</li>
-      <li>Windows binary fopen "rb" for images</li>
-      <li>Path traversal: is_safe_path() blocks ".."</li>
+      <li>端口被占用: 没加 SO_REUSEADDR，关了服务器马上重启报错。加上就好了</li>
+      <li>Chrome 发两个请求: 浏览器会同时请求 /favicon.ico，单线程直接卡死</li>
+      <li>send() 不一定发完: 返回值和期望长度不一致时要循环发</li>
+      <li>图片文件: Windows 下必须 "rb" 打开，不然图片会被 CRLF 搞坏</li>
+      <li>路径遍历: is_safe_path() 检测 ".." 防止目录穿越攻击</li>
     </ul>
-    <p><a href="https://github.com/KimserUM/mini-http-server">Source on GitHub</a></p>
+
+    <p>源代码: <a href="https://github.com/KimserUM/mini-http-server">github.com/KimserUM/mini-http-server</a></p>
   </div>
 </div>
 <button id="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">TOP</button>

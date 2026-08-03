@@ -1,46 +1,51 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SQL Parser Dev Log — Posts</title>
+<title>SQL 解析器开发日志 — 文章</title>
 <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
 <div class="screen-dust"></div>
 <div class="desk-surface"></div>
 <div class="page-nav">
-  <a href="../index.html">Desk</a>
-  <a href="../projects/index.html">Projects</a>
-  <a href="index.html">Posts</a>
-  <a href="../about.html">About</a>
+  <a href="../index.html">桌面</a>
+  <a href="../projects/index.html">项目</a>
+  <a href="index.html">文章</a>
+  <a href="../about.html">关于</a>
 </div>
 <div class="page-container">
-  <a href="../index.html" class="back-to-desk">Back to Desk</a>
+  <a href="../index.html" class="back-to-desk">返回桌面</a>
   <div class="page-paper">
-    <h1>Writing a SQL Parser: Dev Log</h1>
+    <h1>写一个 SQL 解析器的开发日志</h1>
     <p class="page-meta">2026-08-01</p>
-    <p>After the KV store, wanted something closer to compilers. A SQL parser seemed like a good middle ground — parse text, build a tree, evaluate the tree.</p>
-    <h2>Day 1: Tokenizer</h2>
-    <p>Started with regex. Fine for simple cases: SELECT, FROM, identifiers, numbers. Then tested a string with a comma:</p>
+    <p>写完 KV 存储之后，想试试更接近编译器的东西。写个 SQL 解析器感觉是个不错的中间地带——不需要完整的编译器，但能理解词法分析、语法分析和 AST 求值。</p>
+
+    <h2>第一天: 词法分析器</h2>
+    <p>一开始用正则表达式。简单的 SQL 能过：SELECT、FROM、WHERE、标识符、数字。然后测了一个带逗号的字符串：</p>
     <pre><code>INSERT INTO t (name) VALUES ('hello, world')</code></pre>
-    <p>The comma inside the string was treated as a separator. Regex doesn't track state across matches. Replaced with manual FSM.</p>
-    <p>The FSM: maintain position pointer, check current char: whitespace? digit? letter? quote? Consume accordingly. Multi-char operators (&gt;=, &lt;=, &lt;&gt;) need one char of lookahead.</p>
-    <h2>Day 2: Parser</h2>
-    <p>Recursive descent: each grammar rule = one function. parse_select() expects SELECT, column list, FROM, table name.</p>
-    <p>Operator precedence via function depth:</p>
+    <p>字符串里的逗号被当成了分隔符。正则表达式不跟踪状态——它不知道当前是不是在字符串里面。果断放弃正则，改用手写状态机。</p>
+    <p>状态机的思路其实很简单：维护一个位置指针和当前字符，每步看：这是空白？数字？字母？引号？然后相应地消费字符。多字符操作符(>=、<=、<>)需要一个字符的预读。</p>
+
+    <h2>第二天: 语法分析器</h2>
+    <p>选用了递归下降法。每个语法规则对应一个解析函数。parse_select() 期望 SELECT、列列表、FROM、表名依次出现。</p>
+    <p>运算符优先级是最主要的设计决策。在 SQL 中，AND 比 OR 优先级高，比较运算符比两者都高。解决方案是用函数调用深度来编码优先级：</p>
     <pre><code>parse_expression -> parse_or -> parse_and -> parse_cmp -> parse_atom</code></pre>
-    <p>parse_or calls parse_and, loops on OR. parse_and calls parse_cmp, loops on AND. Precedence is free from the call hierarchy.</p>
-    <h2>Day 3: Engine</h2>
-    <p>Table model: dict of dicts. WHERE walks AST recursively. ORDER BY required (type_priority, value) tuples because different types can't compare directly in Python.</p>
-    <h2>What I learned</h2>
+    <p>每层调用下一层更紧的函数，然后在本层的运算符上循环。parse_or 调用 parse_and 然后在 OR 上循环，parse_and 调用 parse_cmp 然后在 AND 上循环。这样优先级自然就对了，不需要显式的优先级表。</p>
+
+    <h2>第三天: 执行引擎</h2>
+    <p>表的数据模型很简单：每行是一个 dict，列名做 key。WHERE 求值就是递归遍历 AST——ColumnRef 从当前行取值，Literal 返��常量，BinaryOp 左右子树递归求值然后运算。</p>
+    <p>ORDER BY 比预想的难。不同类型的数据不能直接比较——Python 会抛 TypeError。解决方案是用 (type_priority, value) 元组包装排序键：NULL 排最后(priority=1)，其他值排前面(priority=0)。这样不同类型之间也能安全比较。</p>
+
+    <h2>收获</h2>
     <ul>
-      <li>Regex is fine until state matters</li>
-      <li>Recursive descent maps grammar rules to functions naturally</li>
-      <li>Operator precedence is encoded in call depth</li>
-      <li>AST evaluation is tree traversal</li>
+      <li>正则适合简单场景，一旦涉及状态(字符串内部、嵌套注释)就不够用了</li>
+      <li>递归下降很直观，语法规则映射到函数，运算符优先级靠调用深度</li>
+      <li>AST 求值本质是树遍历，每种节点类型有自己的求值逻辑</li>
+      <li>真正的 SQL 引擎在解析和执行之间还加了查询优化层，我这个直接跳过了</li>
     </ul>
-    <p><a href="https://github.com/KimserUM/mini-sql">Source on GitHub</a></p>
+    <p>代码: <a href="https://github.com/KimserUM/mini-sql">github.com/KimserUM/mini-sql</a></p>
   </div>
 </div>
 <button id="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">TOP</button>

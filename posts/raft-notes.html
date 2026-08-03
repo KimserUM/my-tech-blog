@@ -1,48 +1,60 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Raft Notes — Posts</title>
+<title>Raft 论文笔记 — 文章</title>
 <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
 <div class="screen-dust"></div>
 <div class="desk-surface"></div>
 <div class="page-nav">
-  <a href="../index.html">Desk</a>
-  <a href="../projects/index.html">Projects</a>
-  <a href="index.html">Posts</a>
-  <a href="../about.html">About</a>
+  <a href="../index.html">桌面</a>
+  <a href="../projects/index.html">项目</a>
+  <a href="index.html">文章</a>
+  <a href="../about.html">关于</a>
 </div>
 <div class="page-container">
-  <a href="../index.html" class="back-to-desk">Back to Desk</a>
+  <a href="../index.html" class="back-to-desk">返回桌面</a>
   <div class="page-paper">
-    <h1>Raft Paper Reading Notes</h1>
+    <h1>Raft 论文阅读笔记</h1>
     <p class="page-meta">2026-07-22</p>
-    <p>Read Diego Ongaro's 2014 Raft paper alongside MIT 6.824. Much easier to understand than Paxos.</p>
-    <h2>Why consensus</h2>
-    <p>In distributed systems, multiple machines need consistent state. Master-slave replication works until the master fails. Consensus algorithms solve leader election without a central coordinator.</p>
-    <h2>Raft's three parts</h2>
+    <p>看了 Diego Ongaro 2014 年的 Raft 论文("In Search of an Understandable Consensus Algorithm")，配合 MIT 6.824 课程。这篇论文比 Paxos 好懂一百倍。记一下关键理解。</p>
+
+    <h2>为什么需要共识算法</h2>
+    <p>分布式系统中，多台机器要保持数据一致。最简单的方案是主从复制——所有写操作发给主节点，主节点同步给从节点。但主节点挂了怎么办？这就是共识算法要解决的问题：在没有中心节点的情况下，多个节点如何就同一个值达成一致。</p>
+
+    <h2>Raft 的三个核心</h2>
     <ul>
-      <li>Leader Election — elect one leader, all client requests go through it</li>
-      <li>Log Replication — leader replicates log entries to all followers</li>
-      <li>Safety — committed entries are never overwritten</li>
+      <li><strong>Leader Election</strong> — 选出一个 Leader，由 Leader 处理所有客户端请求</li>
+      <li><strong>Log Replication</strong> — Leader 把日志复制到所有 Follower</li>
+      <li><strong>Safety</strong> — 保证已 commit 的日志不会被覆盖</li>
     </ul>
-    <h2>Leader election (5.1-5.2)</h2>
-    <p>States: Follower (waiting for heartbeat), Candidate (campaigning), Leader (active). Randomized election timeout: 150-300ms per paper, I used 3-6s for easier debugging. Without randomness, elections deadlock when all nodes campaign simultaneously.</p>
-    <h2>Log replication (5.3)</h2>
-    <p>Heartbeats are empty AppendEntries RPCs. Flow: client sends command to leader, leader appends to local log, leader sends AppendEntries to followers, on majority ACK, leader commits and applies to state machine, leader notifies followers of new commitIndex.</p>
-    <h2>Safety (5.4)</h2>
-    <p><strong>5.4.1 Election restriction:</strong> candidate's log must be at least as up-to-date as majority, checked by comparing last log entry term and index.</p>
-    <p><strong>5.4.2 Commit rule:</strong> leader cannot commit entries from previous terms by counting replicas. This is the most subtle part. Without it, a committed entry could be overwritten by a new leader.</p>
-    <h2>Implementation bugs</h2>
+
+    <h2>Leader 选举 (5.1-5.2 节)</h2>
+    <p>每个节点有三种状态：Follower, Candidate, Leader。</p>
     <ul>
-      <li>Timeout too short (100ms): three-way election split, no winner</li>
-      <li>Missed term check: old leader ignores higher-term RPCs, keeps acting as leader</li>
-      <li>commitIndex boundary: forgot 5.4.2, committed data overwritten by new leader</li>
+      <li>Follower: 一直等 Leader 的心跳。如果在选举超时时间内没收到心跳，变成 Candidate</li>
+      <li>Candidate: 给自己 term+1，投自己一票，向所有节点发 RequestVote</li>
+      <li>获得过半票数: 变成 Leader。收到更高 term 的消息: 退位变 Follower</li>
     </ul>
-    <p><a href="https://github.com/KimserUM/mini-kvstore">Implementation on GitHub</a></p>
+    <p>关键设计: <strong>随机选举超时</strong>。论文建议 150-300ms，我实际用了 3-6 秒(方便调试)。如果不随机，多个节点同时超时变成 Candidate，谁都拿不到过半票，系统永远选不出 Leader——这就是选举分裂。</p>
+
+    <h2>日志复制 (5.3 节)</h2>
+    <p>心跳就是空的 AppendEntries RPC。复制流程：客户端发送命令 -> Leader 追加到日志 -> Leader 发 AppendEntries 给所有 Follower -> 收到过半确认后 commit -> 应用到状态机 -> 在后续心跳中告知 Follower 最新 commitIndex。</p>
+
+    <h2>Safety: 容易忽略的细节 (5.4 节)</h2>
+    <p><strong>5.4.1 选举限制:</strong> Candidate 的日志必须至少和大多数节点一样新，否则不能当选。"一样新"是比较最后一条日志的 term 和 index。</p>
+    <p><strong>5.4.2 只 commit 当前 term 的日志:</strong> Leader 不能通过统计副本数来提交之前 term 的日志。这个真的很容易漏掉！如果不加这个限制，一个已 commit 的日志可能在新的 Leader 上任后被覆盖。</p>
+
+    <h2>实际实现时踩的坑</h2>
+    <ul>
+      <li>选举超时设太短(100ms): 三个节点同时变成 Candidate，选举分裂，永远选不出来。调到 3-6 秒正常了</li>
+      <li>收到 RPC 没检查 term: 旧 Leader 收到更高 term 的消息后还自以为自己是 Leader，继续发心跳</li>
+      <li>commitIndex 的边界: 忘了 5.4.2 的规则，导致已 commit 数据在新 Leader 上任后被覆盖</li>
+    </ul>
+    <p>实现代码: <a href="https://github.com/KimserUM/mini-kvstore">github.com/KimserUM/mini-kvstore</a></p>
   </div>
 </div>
 <button id="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">TOP</button>

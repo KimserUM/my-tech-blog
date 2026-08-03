@@ -1,56 +1,69 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>mini-kvstore — Projects</title>
+<title>mini-kvstore — 项目</title>
 <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
 <div class="screen-dust"></div>
 <div class="desk-surface"></div>
 <div class="page-nav">
-  <a href="../index.html">Desk</a>
-  <a href="index.html">Projects</a>
-  <a href="../posts/index.html">Posts</a>
-  <a href="../about.html">About</a>
+  <a href="../index.html">桌面</a>
+  <a href="index.html">项目</a>
+  <a href="../posts/index.html">文章</a>
+  <a href="../about.html">关于</a>
 </div>
 <div class="page-container">
-  <a href="../index.html" class="back-to-desk">Back to Desk</a>
+  <a href="../index.html" class="back-to-desk">返回桌面</a>
   <div class="page-paper">
     <h1>mini-kvstore</h1>
-    <p class="page-meta">Python | Raft consensus | WAL | TCP | ~1500 lines | 2026.07</p>
-    <h2>What it does</h2>
-    <p>A distributed key-value store with Raft-based consensus. Multiple nodes form a cluster, elect a leader, and replicate writes across nodes.</p>
-    <h2>Three-layer architecture</h2>
-    <pre><code>Store (store.py): in-memory dict + WAL, JSON-line format,
-  snapshot compaction, crash recovery
+    <p class="page-meta">Python | Raft 共识 | WAL | TCP | ~1500行 | 2026.07</p>
 
-Network (net.py): custom protocol [4-byte len][JSON],
-  TCP with auto-reconnection
+    <h2>项目简介</h2>
+    <p>分布式 KV 存储引擎，基于 Raft 共识协议。多个节点组成集群，自动选举 Leader，所有写操作通过 Leader 复制到集群中的每个节点。配合 MIT 6.824 课程学习分布式系统。</p>
 
-Consensus (raft.py): leader election, log replication,
-  commit only current-term entries (5.4.2)</code></pre>
-    <h2>Raft: Leader election</h2>
-    <p>Follower/Candidate/Leader states. Randomized timeout 3-6s. On timeout: increment term, vote for self, RequestVote. Win with majority. Step down on higher term.</p>
-    <h2>Raft: Log replication</h2>
-    <p>Leader appends to log, sends AppendEntries. On majority ACK, commit and apply. Tracks nextIndex/matchIndex per follower.</p>
-    <h2>Raft: Safety</h2>
+    <h2>三层架构</h2>
+    <pre><code>存储层 (store.py)
+  内存 dict + WAL 预写日志
+  JSON 行格式(方便调试) + 快照压缩
+  崩溃恢复: 启动时重放 WAL
+
+网络层 (net.py)
+  自定义协议: [4字节大端长度][JSON消息体]
+  TCP + 自动重连 + 异步消息分发
+
+共识层 (raft.py)
+  Leader 选举(随机超时) + 日志复制(AppendEntries)
+  只 commit 当前 term 的日志(论文 5.4.2 节)</code></pre>
+
+    <h2>Raft: Leader 选举</h2>
+    <p>三种状态轮换: Follower(等待心跳) -> Candidate(发起选举) -> Leader(处理请求)。随机选举超时 3-6 秒(论文建议 150-300ms，调大方便调试)。获得过半票数胜出，收到更高 term 则退位。</p>
+
+    <h2>Raft: 日志复制</h2>
+    <p>Leader 收到写请求 -> 追加到本地日志 -> 发 AppendEntries 给 Follower -> 过半确认后 commit -> 应用到状态机。每个 Follower 维护 nextIndex(下一条要发的) 和 matchIndex(已匹配的)。不匹配时 nextIndex 回退重试。</p>
+
+    <h2>Raft: 安全性</h2>
     <ol>
-      <li>Election restriction: candidate log >= majority</li>
-      <li>Commit only current-term entries</li>
-      <li>Term never decreases</li>
+      <li>选举限制: Candidate 的日志必须至少和多数节点一样新</li>
+      <li>Commit 规则: 只 commit 当前 term 的日志(防止已 commit 数据被覆盖)</li>
+      <li>Term 单调: term 只能增加，收到更高 term 立即退位</li>
     </ol>
-    <h2>WAL</h2>
+
+    <h2>WAL 设计</h2>
     <pre><code>{"op": "set", "key": "name", "val": "tom"}
 {"op": "del", "key": "temp"}</code></pre>
-    <h2>Problems</h2>
+    <p>每条日志一行 JSON。恢复时先加载快照，再重放快照之后的 WAL。崩溃时部分写入的损坏行直接跳过。</p>
+
+    <h2>踩坑记录</h2>
     <ul>
-      <li>Election split at 100ms timeout, fixed at 3-6s</li>
-      <li>Stale leader: added term checks to every RPC handler</li>
-      <li>Pickle WAL undebuggable, switched to JSON lines</li>
+      <li>选举分裂: 超时 100ms 时三个节点同时竞争，谁也赢不了。调到 3-6 秒正常</li>
+      <li>过时 Leader: 收到更高 term 的消息没检查 term，旧 Leader 还在发心跳</li>
+      <li>WAL 格式: 一开始用 pickle，日志损坏了没法手动看。换成 JSON 行</li>
     </ul>
-    <p><a href="https://github.com/KimserUM/mini-kvstore">Source on GitHub</a></p>
+
+    <p>源代码: <a href="https://github.com/KimserUM/mini-kvstore">github.com/KimserUM/mini-kvstore</a></p>
   </div>
 </div>
 <button id="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">TOP</button>
