@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SQL parser dev log — YG Blog</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="../index.html" class="logo">YG</a>
+    <div class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="../projects/index.html">Projects</a>
+      <a href="index.html">Posts</a>
+      <button id="theme-toggle">Dark</button>
+    </div>
+  </div>
+</nav>
+
+<main class="container post">
+  <h1>Writing a SQL parser: dev log</h1>
+  <p class="date">2026-08-01</p>
+
+  <p>After finishing the KV store, I wanted to try something closer to compilers. Writing a SQL parser seemed like a good middle ground — not a full compiler, but enough to understand lexing, parsing, and tree evaluation.</p>
+
+  <h2>Day 1: Tokenizer</h2>
+  <p>Started with regex. It worked for simple cases: SELECT, FROM, WHERE, identifiers, numbers. But then I tested a string with a comma inside it:</p>
+  <pre><code>INSERT INTO t (name) VALUES ('hello, world')</code></pre>
+  <p>The comma inside the string got treated as a separator. Regex doesn't track state well across matches. Scrapped it and wrote a manual state machine.</p>
+  <p>The state machine approach is simpler than it sounds. You maintain a position pointer and a current character. At each step you ask: is this whitespace? a digit? a letter? a quote? Then consume accordingly. The tricky part is multi-character operators (&gt;=, &lt;=, &lt;&gt;) where you need one character of lookahead.</p>
+
+  <h2>Day 2: Parser</h2>
+  <p>Recursive descent seemed like the natural approach. Each grammar rule gets its own function. When you call parse_select(), it expects SELECT, then a column list, then FROM, then a table name, and so on.</p>
+  <p>Operator precedence was the main design decision. In SQL, AND binds tighter than OR, and comparisons bind tighter than both. The solution: encode precedence in function call depth.</p>
+  <pre><code>parse_expression -> parse_or -> parse_and -> parse_comparison -> parse_atom</code></pre>
+  <p>Each level calls the next tighter level and then loops on its own operator. So parse_or calls parse_and and then loops on OR tokens. parse_and calls parse_comparison and loops on AND. This naturally gives the right precedence without an explicit precedence table.</p>
+
+  <h2>Day 3: Execution engine</h2>
+  <p>The table model is straightforward: a dict keyed by column name for each row. WHERE evaluation walks the AST recursively.</p>
+  <p>ORDER BY was harder than expected. Different data types (int, str, None) can't be compared directly — Python throws TypeError. The fix: wrap sort keys in a tuple: (type_priority, value). None gets priority 1 (sorts last), everything else gets priority 0. This cleanly separates type groups before value comparison.</p>
+
+  <h2>What I learned</h2>
+  <ul>
+    <li>Regex is fine for simple tokenizing, breaks down when state matters</li>
+    <li>Recursive descent is intuitive once you map grammar rules to functions</li>
+    <li>Operator precedence comes for free from call hierarchy</li>
+    <li>AST evaluation is basically tree traversal — every node type has an eval method</li>
+    <li>Real SQL engines add query optimization between parsing and execution; mine skips that entirely</li>
+  </ul>
+
+  <p>The result: a SQL engine that actually runs SELECT, INSERT, CREATE, DELETE with WHERE, ORDER BY, and LIMIT. Not production-grade, but enough to understand the fundamentals.</p>
+
+  <p><a href="https://github.com/KimserUM/mini-sql">Source on GitHub</a></p>
+</main>
+
+<footer>
+  <p>Yang Guangyu. Powered by plain HTML/CSS.</p>
+</footer>
+<script src="../js/app.js"></script>
+</body>
+</html>

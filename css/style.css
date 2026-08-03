@@ -176,6 +176,43 @@ footer {
   margin-bottom: 20px;
 }
 
+/* Dark mode */
+body.dark {
+  --bg: #1a1a2e;
+  --text: #cdd6f4;
+  --accent: #89b4fa;
+  --border: #313244;
+  --code-bg: #181825;
+  --muted: #a6adc8;
+}
+
+/* Theme toggle button */
+#theme-toggle {
+  background: var(--code-bg);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  padding: 3px 12px;
+  border-radius: 3px;
+  font-size: 13px;
+  cursor: pointer;
+  margin-left: 16px;
+}
+#theme-toggle:hover { color: var(--accent); border-color: var(--accent); }
+
+/* Search input */
+#project-search {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 14px;
+  margin-bottom: 16px;
+  background: var(--bg);
+  color: var(--text);
+  outline: none;
+}
+#project-search:focus { border-color: var(--accent); }
+
 /* Responsive */
 @media (max-width: 600px) {
   .hero h1 { font-size: 26px; }

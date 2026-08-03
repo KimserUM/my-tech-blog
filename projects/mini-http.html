@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mini-http-server — YG Blog</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="../index.html" class="logo">YG</a>
+    <div class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="index.html">Projects</a>
+      <a href="../posts/index.html">Posts</a>
+      <button id="theme-toggle">Dark</button>
+    </div>
+  </div>
+</nav>
+
+<main class="container post">
+  <h1>mini-http-server</h1>
+  <p class="project-meta">C | socket | pthread | thread pool | ~1200 lines | 2026.06-07</p>
+
+  <h2>What it does</h2>
+  <p>A from-scratch HTTP/1.1 server written in C. Listens on a TCP port, parses HTTP requests, serves static files, and exposes a few JSON API endpoints.</p>
+
+  <h2>Architecture</h2>
+  <pre><code>main.c  - entry point, signal handling
+server.c - TCP socket (socket/bind/listen/accept), thread pool dispatch
+http.c   - HTTP request parsing, response building
+threadpool.c - producer-consumer thread pool (mutex + cond)</code></pre>
+
+  <h2>Key implementation details</h2>
+
+  <h3>HTTP parsing</h3>
+  <p>Manual state machine. First line parsed with sscanf to extract method, path, version. Header lines split on the first colon. Body separated by the double CRLF marker. Content-Length header used to determine body size.</p>
+
+  <h3>Thread pool</h3>
+  <p>Producer-consumer model with a circular queue. Main thread (producer) drops client fds into the queue after accept(). Worker threads (consumers) pop tasks and process them. pthread_mutex_t protects the queue, pthread_cond_t signals when queue is non-empty or non-full.</p>
+  <pre><code>typedef struct {
+    pthread_t workers[MAX_WORKERS];
+    task_t    queue[MAX_QUEUE];
+    int       front, rear, count;
+    pthread_mutex_t lock;
+    pthread_cond_t  not_empty;
+    pthread_cond_t  not_full;
+    int       running;
+} threadpool_t;</code></pre>
+
+  <h3>Keep-Alive</h3>
+  <p>If the client sends Connection: keep-alive, the server keeps the socket open and reads multiple requests in a loop (max 50 per connection, 5s timeout). Connection: close header signals the last response.</p>
+
+  <h2>API endpoints</h2>
+  <ul>
+    <li>GET /api/time — server timestamp</li>
+    <li>GET /api/stats — thread pool status</li>
+    <li>GET /api/headers — echo parsed request info</li>
+    <li>POST /api/echo — echo POST body</li>
+    <li>POST /api/upload — simple file upload via multipart/form-data</li>
+  </ul>
+
+  <h2>Problems solved</h2>
+  <ul>
+    <li>Port reuse: SO_REUSEADDR to avoid TIME_WAIT blocking restarts</li>
+    <li>Browser double-request: Chrome requests /favicon.ico alongside the main page. Single-threaded version deadlocked until pthread was added.</li>
+    <li>send() partial writes: send() return value checked, loop if needed</li>
+    <li>Binary file serving: fopen with "rb" on Windows to avoid CRLF corruption of images</li>
+    <li>Path traversal: is_safe_path() blocks ".." in URL paths</li>
+  </ul>
+
+  <h2>What could be better</h2>
+  <ul>
+    <li>epoll instead of thread-per-connection for higher concurrency</li>
+    <li>Proper HTTP/1.1 pipelining</li>
+    <li>Chunked transfer encoding</li>
+    <li>TLS/HTTPS support</li>
+  </ul>
+
+  <p><a href="https://github.com/KimserUM/mini-http-server">Source on GitHub</a></p>
+</main>
+
+<footer>
+  <p>Yang Guangyu. Powered by plain HTML/CSS.</p>
+</footer>
+<script src="../js/app.js"></script>
+</body>
+</html>

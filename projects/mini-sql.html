@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mini-sql — YG Blog</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="../index.html" class="logo">YG</a>
+    <div class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="index.html">Projects</a>
+      <a href="../posts/index.html">Posts</a>
+      <button id="theme-toggle">Dark</button>
+    </div>
+  </div>
+</nav>
+
+<main class="container post">
+  <h1>mini-sql</h1>
+  <p class="project-meta">Python | tokenizer | recursive descent parser | execution engine | ~1100 lines | 2026.07-08</p>
+
+  <h2>What it does</h2>
+  <p>A miniature SQL database engine with three stages: lexer converts SQL text to tokens, parser builds an AST from tokens, engine executes the AST on in-memory tables. No external dependencies for the core logic.</p>
+
+  <h2>Pipeline</h2>
+  <pre><code>SQL string
+  -> Tokenizer (hand-written state machine)
+  -> Token stream
+  -> Parser (recursive descent)
+  -> AST
+  -> Engine (tree-walking interpreter)
+  -> Result (rows / status messages)</code></pre>
+
+  <h2>Stage 1: Tokenizer</h2>
+  <p>Hand-written finite state machine. Main states: whitespace skip, number (digits + optional decimal), word (alphanumeric + underscore, checked against keyword table), string (single-quote delimited), operator (single or double character). Comments (--) are skipped.</p>
+  <p>Keywords: SELECT, FROM, WHERE, INSERT, INTO, VALUES, CREATE, TABLE, DELETE, AND, OR, ORDER, BY, ASC, DESC, LIMIT.</p>
+
+  <h2>Stage 2: Recursive Descent Parser</h2>
+  <p>Each grammar rule maps to one parse function. Operator precedence is encoded via call hierarchy:</p>
+  <pre><code>parse_expression()
+  -> parse_or()        // handles OR
+    -> parse_and()     // handles AND
+      -> parse_comparison()  // handles =, <, >, <=, >=, <>
+        -> parse_atom()      // column ref, literal, (expr)</code></pre>
+
+  <h2>Stage 3: Execution Engine</h2>
+  <p>Tables stored as dict of dicts. Columns as a list of ColumnDef (name + type). Rows as a list of dicts (one dict per row).</p>
+  <p>WHERE evaluation walks the expression AST recursively: ColumnRef looks up the value from the current row, Literal returns its value, BinaryOp evaluates left and right subtrees then applies the operator.</p>
+  <p>Type conversion happens at INSERT time (INT to int, FLOAT to float, NULL handling). ORDER BY casts values to (type_sort, value) tuples so different types sort together without error.</p>
+
+  <h2>Supported SQL</h2>
+  <pre><code>CREATE TABLE users (id INT, name STRING, age INT);
+
+INSERT INTO users (id, name, age) VALUES (1, 'tom', 20);
+INSERT INTO users (id, name, age) VALUES (2, 'alice', 22);
+
+SELECT * FROM users;
+SELECT name, age FROM users WHERE age >= 20;
+SELECT * FROM users WHERE name = 'tom' AND age > 18;
+SELECT * FROM users ORDER BY age DESC LIMIT 5;
+
+DELETE FROM users WHERE id = 3;</code></pre>
+
+  <h2>Things not supported (on purpose)</h2>
+  <p>JOIN, subqueries, GROUP BY, UPDATE, indexes, transactions. These would require a query planner and more complex execution model, beyond the scope of understanding the fundamentals.</p>
+
+  <h2>Problems solved</h2>
+  <ul>
+    <li>Regex tokenizer broke on strings containing commas. Replaced with hand-written state machine.</li>
+    <li>AND/OR precedence: initially parsed as same level, gave wrong results for a>1 OR b>2 AND c>3. Fixed by splitting into parse_or/parse_and levels.</li>
+    <li>NULL in ORDER BY: comparing None with int crashes. Wrapped sort keys in (type_group, value) tuples.</li>
+  </ul>
+
+  <p><a href="https://github.com/KimserUM/mini-sql">Source on GitHub</a></p>
+</main>
+
+<footer>
+  <p>Yang Guangyu. Powered by plain HTML/CSS.</p>
+</footer>
+<script src="../js/app.js"></script>
+</body>
+</html>

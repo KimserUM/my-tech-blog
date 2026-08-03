@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mini-kvstore — YG Blog</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="../index.html" class="logo">YG</a>
+    <div class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="index.html">Projects</a>
+      <a href="../posts/index.html">Posts</a>
+      <button id="theme-toggle">Dark</button>
+    </div>
+  </div>
+</nav>
+
+<main class="container post">
+  <h1>mini-kvstore</h1>
+  <p class="project-meta">Python | Raft consensus | WAL | TCP | ~1500 lines | 2026.07</p>
+
+  <h2>What it does</h2>
+  <p>A distributed key-value store with Raft-based consensus. Multiple nodes form a cluster, elect a leader, and replicate write operations across all nodes. Reads can be served by any node.</p>
+
+  <h2>Three-layer architecture</h2>
+  <pre><code>Layer 1: Store (store.py)
+  - In-memory dict + WAL (Write-Ahead Log)
+  - JSON-line log format for human readability
+  - Snapshot-based compaction when log exceeds 10MB
+  - Crash recovery: replay WAL on startup
+
+Layer 2: Network (net.py)
+  - Custom binary protocol: [4-byte big-endian length][JSON body]
+  - TCP with automatic reconnection
+  - Async message dispatch via threading
+
+Layer 3: Consensus (raft.py)
+  - Leader election with randomized timeouts
+  - Log replication via AppendEntries RPC
+  - Commit only current-term entries (paper section 5.4.2)</code></pre>
+
+  <h2>Raft implementation notes</h2>
+
+  <h3>Leader election</h3>
+  <p>Three states: Follower, Candidate, Leader. Each node starts as Follower. If no heartbeat received within election timeout (3-6s randomized), become Candidate, increment term, vote for self, send RequestVote to all peers. Win with majority. Step down if higher term seen.</p>
+
+  <h3>Log replication</h3>
+  <p>Leader receives client writes, appends to local log, sends AppendEntries to followers. On majority ACK, commit and apply to state machine. Leader tracks nextIndex and matchIndex per follower. On mismatch, decrement nextIndex and retry until convergence.</p>
+
+  <h3>Safety constraints</h3>
+  <ol>
+    <li>Election restriction: candidate's log must be at least as up-to-date as majority</li>
+    <li>Commit rule: only commit entries from current term (paper 5.4.2)</li>
+    <li>Term monotonic: never decrease; always step down on higher term</li>
+  </ol>
+
+  <h2>WAL design</h2>
+  <pre><code>{"op": "set", "key": "name", "val": "tom"}
+{"op": "del", "key": "temp"}
+{"op": "set", "key": "count", "val": 42}</code></pre>
+  <p>Each line is a JSON record. On crash recovery, load the last snapshot (full state dump), then replay WAL entries added after the snapshot. Corrupted lines (partial writes during crash) are skipped.</p>
+
+  <h2>CLI usage</h2>
+  <pre><code># Terminal 1: start node 1
+python -m src.server --id node1 --port 8000
+
+# Terminal 2: start node 2, join cluster
+python -m src.server --id node2 --port 8001 \
+  --peers node1:127.0.0.1:8000
+
+# In the leader terminal:
+>> set hello world
+>> get hello
+>> status</code></pre>
+
+  <h2>Problems encountered</h2>
+  <ul>
+    <li>Election split: with 100ms timeout, all 3 nodes became candidates simultaneously. Fixed by increasing to 3-6s.</li>
+    <li>Stale leader: old leader didn't check term on incoming RPCs, continued acting as leader. Fixed by adding term checks to every handler.</li>
+    <li>WAL format: initially used pickle, couldn't debug corrupted logs. Switched to JSON lines.</li>
+  </ul>
+
+  <p><a href="https://github.com/KimserUM/mini-kvstore">Source on GitHub</a></p>
+</main>
+
+<footer>
+  <p>Yang Guangyu. Powered by plain HTML/CSS.</p>
+</footer>
+<script src="../js/app.js"></script>
+</body>
+</html>

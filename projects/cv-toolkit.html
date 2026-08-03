@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>cv-toolkit — YG Blog</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="../index.html" class="logo">YG</a>
+    <div class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="index.html">Projects</a>
+      <a href="../posts/index.html">Posts</a>
+      <button id="theme-toggle">Dark</button>
+    </div>
+  </div>
+</nav>
+
+<main class="container post">
+  <h1>cv-toolkit</h1>
+  <p class="project-meta">Python | OpenCV | numpy | KNN | HOG | ~500 lines | 2026.08</p>
+
+  <h2>What it does</h2>
+  <p>Two modules: an image processor with chainable OpenCV operations, and a KNN image classifier built from scratch with numpy (no sklearn).</p>
+
+  <h2>Module 1: Image processor</h2>
+  <p>Wrapper around OpenCV with a fluent interface. Every method returns self so you can chain operations:</p>
+  <pre><code>proc = ImgProcessor("photo.jpg")
+proc.to_gray().gaussian_blur(5).canny(50, 150).save("edge.jpg")</code></pre>
+
+  <p>Supported operations:</p>
+  <ul>
+    <li>Conversion: grayscale, binary (fixed and OTSU thresholding)</li>
+    <li>Blur: Gaussian, median</li>
+    <li>Edge detection: Canny, Sobel</li>
+    <li>Histogram: equalization</li>
+    <li>Morphology: erode, dilate, open, close</li>
+    <li>Geometry: resize, rotate</li>
+    <li>Undo/redo via operation history</li>
+  </ul>
+
+  <h2>Module 2: Image classifier</h2>
+
+  <h3>Feature extraction</h3>
+  <p><strong>Color histogram:</strong> 32-bin histogram per RGB channel, normalized and concatenated into a 96-d vector. Captures color distribution independent of image size.</p>
+  <p><strong>HOG:</strong> Hand-implemented Histogram of Oriented Gradients (Dalal & Triggs, 2005). Steps:</p>
+  <ol>
+    <li>Compute gradient magnitude and orientation per pixel using Sobel</li>
+    <li>Divide image into 8x8 cells, build 9-bin orientation histogram per cell weighted by magnitude</li>
+    <li>L2-normalize globally</li>
+  </ol>
+
+  <h3>KNN classifier</h3>
+  <p>Brute-force Euclidean distance to all training samples. Sort distances, take top K, majority vote. K defaults to 3 (forced odd to avoid ties).</p>
+  <pre><code>knn = KNNClassifier(k=5)
+knn.fit(train_features, train_labels)
+pred = knn.predict(test_feature)
+accuracy = knn.evaluate(test_features, test_labels)</code></pre>
+
+  <h3>Data loading</h3>
+  <p>load_images_from_folder() reads image folders where each subfolder is a class label. Images are resized to uniform dimensions, color histogram features extracted.</p>
+
+  <h2>Test results</h2>
+  <p>On synthetic data (red_tone / blue_tone / green_tone, 20 images each with noise), KNN with color histogram features achieves 100% accuracy. On real datasets, performance depends on the quality of feature extraction and class separability.</p>
+
+  <p><a href="https://github.com/KimserUM/cv-toolkit">Source on GitHub</a></p>
+</main>
+
+<footer>
+  <p>Yang Guangyu. Powered by plain HTML/CSS.</p>
+</footer>
+<script src="../js/app.js"></script>
+</body>
+</html>
