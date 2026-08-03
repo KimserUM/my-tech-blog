@@ -2,63 +2,64 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>About — Yang Guangyu</title>
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<nav class="navbar">
-  <div class="nav-inner">
-    <a href="index.html" class="logo">YG</a>
-    <div class="nav-links">
-      <a href="index.html">Home</a>
-      <a href="projects/index.html">Projects</a>
-      <a href="posts/index.html">Posts</a>
-      <a href="about.html">About</a>
-      <button id="theme-toggle">Dark</button>
-    </div>
+<div class="screen-dust"></div>
+<div class="desk-surface"></div>
+
+<div class="page-nav">
+  <a href="index.html">Desk</a>
+  <a href="projects/index.html">Projects</a>
+  <a href="posts/index.html">Posts</a>
+  <a href="about.html" class="active">About</a>
+</div>
+
+<div class="page-container">
+  <a href="index.html" class="back-to-desk">Back to Desk</a>
+
+  <div class="page-paper">
+    <h1>About</h1>
+    <p class="page-meta">Yang Guangyu &middot; BIT &middot; Computer Science &middot; Class of 2027</p>
+
+    <p>CS undergrad at Beijing Institute of Technology. Preparing for graduate school interviews. Two years of coding, mostly Python and C. Interested in distributed systems, computer vision, and backend engineering.</p>
+
+    <p>Builds things to understand them. Every project in the Projects section started as a question: "how does this actually work?"</p>
+
+    <h2>Skills</h2>
+    <table>
+      <tr><td style="width:140px">Languages</td><td>Python, C, C++, SQL, HTML/CSS/JS</td></tr>
+      <tr><td style="width:140px">Tools</td><td>Git, Linux shell, OpenCV, Flask, GCC, Make</td></tr>
+      <tr><td style="width:140px">Concepts</td><td>TCP/IP, HTTP, Raft consensus, SQL parsing, computer vision</td></tr>
+      <tr><td style="width:140px">Languages</td><td>Chinese (native), English (technical)</td></tr>
+    </table>
+
+    <h2>Projects</h2>
+    <p>Six projects completed in 2026 as part of graduate school interview preparation:</p>
+    <ol>
+      <li><strong>mini-http-server</strong> — HTTP/1.1 server in C with thread pool</li>
+      <li><strong>mini-kvstore</strong> — Distributed KV store with Raft consensus</li>
+      <li><strong>mini-sql</strong> — SQL lexer, parser, and execution engine</li>
+      <li><strong>cv-toolkit</strong> — Image processing and KNN classifier</li>
+      <li><strong>my-tech-blog</strong> — This blog, plain HTML/CSS/JS</li>
+      <li><strong>learning-log</strong> — CLI tool for tracking daily progress</li>
+    </ol>
+    <p>All source code on <a href="https://github.com/KimserUM">GitHub</a>.</p>
+
+    <h2>About this blog</h2>
+    <p>No frameworks, no build step. Plain HTML, a single CSS file, a small JS file. Loads instantly. Works everywhere.</p>
+
+    <h2>Contact</h2>
+    <p>
+      GitHub: <a href="https://github.com/KimserUM">KimserUM</a><br>
+      Email: yangguangyuking@gmail.com
+    </p>
   </div>
-</nav>
+</div>
 
-<main class="container post">
-<h1>About</h1>
-<p>CS undergrad at Beijing Institute of Technology. Currently preparing for graduate school interviews.</p>
-<p>Writes code in Python and C. Interested in distributed systems, computer vision, and backend engineering. Builds things to understand them — every project in the Projects section started as a question: "how does this actually work?"</p>
-
-<h2>Skills</h2>
-<table>
-  <tr><td style="width:140px;color:var(--muted)">Languages</td><td>Python, C, C++, SQL, HTML/CSS/JS</td></tr>
-  <tr><td style="width:140px;color:var(--muted)">Tools</td><td>Git, Linux/Unix shell, OpenCV, Flask, GCC, Make</td></tr>
-  <tr><td style="width:140px;color:var(--muted)">Concepts</td><td>TCP/IP, HTTP, Raft consensus, SQL parsing, computer vision basics</td></tr>
-  <tr><td style="width:140px;color:var(--muted)">Languages</td><td>Chinese (native), English (technical reading/writing)</td></tr>
-</table>
-
-<h2>Projects</h2>
-<p>Six projects completed in 2026 as part of grad school interview preparation:</p>
-<ol>
-  <li><strong>mini-http-server</strong> — HTTP/1.1 server in C with thread pool</li>
-  <li><strong>mini-kvstore</strong> — Distributed KV store with Raft consensus</li>
-  <li><strong>mini-sql</strong> — SQL lexer, parser, and execution engine</li>
-  <li><strong>cv-toolkit</strong> — Image processing and KNN classifier</li>
-  <li><strong>my-tech-blog</strong> — This blog, plain HTML/CSS/JS</li>
-  <li><strong>learning-log</strong> — CLI tool for tracking daily progress</li>
-</ol>
-<p>All source code on <a href="https://github.com/KimserUM">GitHub</a>.</p>
-
-<h2>Why this blog exists</h2>
-<p>To document what I learn and build. Writing forces clarity — if you can't explain something, you don't understand it yet.</p>
-<p>No frameworks, no build step, no JavaScript bloat. Plain HTML, a single CSS file, and a 30-line JS file for dark mode and search. Loads instantly. Works everywhere. Easy to maintain.</p>
-
-<h2>Contact</h2>
-<p>
-  GitHub: <a href="https://github.com/KimserUM">KimserUM</a><br>
-  Email: yangguangyuking@gmail.com
-</p>
-</main>
-
-<footer>
-  <p>Yang Guangyu. Powered by plain HTML/CSS.</p>
-</footer>
+<button id="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">TOP</button>
 <script src="js/app.js"></script>
 </body>
 </html>

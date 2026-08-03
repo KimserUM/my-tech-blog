@@ -1,92 +1,133 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Yang Guangyu · Blog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yang Guangyu</title>
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-<nav class="navbar">
-  <div class="nav-inner">
-    <a href="index.html" class="logo">YG</a>
-    <div class="nav-links">
-      <a href="index.html">Home</a>
-      <a href="projects/index.html">Projects</a>
-      <a href="posts/index.html">Posts</a>
-      <a href="about.html">About</a>
-      <button id="theme-toggle">Dark</button>
+<div class="screen-dust"></div>
+<div class="desk-surface"></div>
+
+<div class="desk-canvas">
+  <div class="desk-layout">
+
+    <!-- Hero card: center -->
+    <div class="paper-card hero-card">
+      <h1>Yang Guangyu</h1>
+      <p class="subtitle">
+        BIT &middot; Computer Science &middot; 2027<br>
+        Distributed Systems / Computer Vision / Backend
+      </p>
+      <div class="stamp-divider">CS</div>
     </div>
+
+    <!-- Dossier folders: left side -->
+    <div class="dossier-stack">
+      <a href="projects/index.html" class="dossier-folder">
+        <div class="dossier-closed">
+          <span class="dossier-label">PROJECTS</span>
+          <div class="dossier-tab">PROJECTS</div>
+        </div>
+      </a>
+      <a href="posts/index.html" class="dossier-folder">
+        <div class="dossier-closed">
+          <span class="dossier-label">POSTS</span>
+          <div class="dossier-tab">POSTS</div>
+        </div>
+      </a>
+      <a href="about.html" class="dossier-folder">
+        <div class="dossier-closed">
+          <span class="dossier-label">ABOUT</span>
+          <div class="dossier-tab">ABOUT</div>
+        </div>
+      </a>
+    </div>
+
+    <!-- Projects clipboard: left -->
+    <div class="paper-card projects-clipboard">
+      <div class="clip-hardware"></div>
+      <h2>Recent Projects</h2>
+
+      <a href="projects/mini-http.html" class="project-item">
+        <span class="p-name">mini-http-server</span>
+        <span class="p-meta">C &middot; socket &middot; thread pool &middot; ~1200 lines</span>
+      </a>
+      <a href="projects/mini-kvstore.html" class="project-item">
+        <span class="p-name">mini-kvstore</span>
+        <span class="p-meta">Python &middot; Raft &middot; WAL &middot; ~1500 lines</span>
+      </a>
+      <a href="projects/mini-sql.html" class="project-item">
+        <span class="p-name">mini-sql</span>
+        <span class="p-meta">Python &middot; parser &middot; engine &middot; ~1100 lines</span>
+      </a>
+      <a href="projects/cv-toolkit.html" class="project-item">
+        <span class="p-name">cv-toolkit</span>
+        <span class="p-meta">OpenCV &middot; KNN &middot; HOG &middot; ~500 lines</span>
+      </a>
+    </div>
+
+    <!-- Posts journal: right -->
+    <div class="paper-card posts-notebook">
+      <h2>Recent Posts</h2>
+
+      <a href="posts/tcp-http-server.html" class="post-item">
+        <span class="post-title">Writing an HTTP Server in C</span>
+        <span class="post-date">2026-07-15</span>
+        <span class="post-excerpt">From socket() to thread pools, lessons from building a real TCP server</span>
+      </a>
+      <a href="posts/raft-notes.html" class="post-item">
+        <span class="post-title">Raft Paper Reading Notes</span>
+        <span class="post-date">2026-07-22</span>
+        <span class="post-excerpt">Leader election, log replication, and the 5.4.2 commit rule</span>
+      </a>
+      <a href="posts/sql-parser-diary.html" class="post-item">
+        <span class="post-title">Writing a SQL Parser: Dev Log</span>
+        <span class="post-date">2026-08-01</span>
+        <span class="post-excerpt">Tokenizer, recursive descent, and why regex broke on commas</span>
+      </a>
+    </div>
+
+    <!-- Calling card: right side -->
+    <div class="paper-card calling-card">
+      <div class="card-logo">YG</div>
+      <div class="card-sub">
+        GRAD SCHOOL INTERVIEW PREP<br>
+        CLASS OF 2027
+      </div>
+      <div class="card-gh">
+        <a href="https://github.com/KimserUM">github.com/KimserUM</a>
+      </div>
+    </div>
+
+    <!-- Social stamps: bottom right -->
+    <div class="stamp-cluster">
+      <a href="https://github.com/KimserUM" class="stamp-link" style="--r: -12deg;" aria-label="GitHub">GH</a>
+      <a href="mailto:yangguangyuking@gmail.com" class="stamp-link" style="--r: 8deg;" aria-label="Email">@</a>
+    </div>
+
+    <!-- Legal strip -->
+    <div class="legal-strip">
+      <span>FORM 8-B: All content &copy; 2026 Yang Guangyu.</span>
+      <span style="margin-left: 16px;">Projects migrated from previous account. See <a href="about.html">About</a>.</span>
+    </div>
+
+    <div class="registry-line">
+      PROPERTY OF YG ARCHIVE // CLASSIFICATION YEAR: 2026 // DO NOT DUPLICATE
+    </div>
+
   </div>
-</nav>
+</div>
 
-<main class="container">
-  <section class="hero">
-    <h1>Yang Guangyu</h1>
-    <p class="subtitle">
-      BIT &middot; Computer Science &middot; 2027<br>
-      Distributed Systems / Computer Vision / Backend
-    </p>
-  </section>
+<!-- Signpost buttons -->
+<button class="signpost" id="sp-projects" onclick="document.querySelector('.projects-clipboard').scrollIntoView({behavior:'smooth',block:'center'})">PROJECTS</button>
+<button class="signpost" id="sp-posts" onclick="document.querySelector('.posts-notebook').scrollIntoView({behavior:'smooth',block:'center'})">POSTS</button>
+<button class="signpost" id="sp-about" onclick="location.href='about.html'">ABOUT</button>
+<button class="signpost" id="sp-github" onclick="window.open('https://github.com/KimserUM')">GITHUB</button>
 
-  <section class="section">
-    <h2>关于</h2>
-    <p>
-      CS undergrad, preparing for grad school. Two years of coding, mostly Python and C.
-      Building projects to strengthen fundamentals and build a portfolio.
-    </p>
-    <p>
-      GitHub: <a href="https://github.com/KimserUM" target="_blank">KimserUM</a>
-    </p>
-  </section>
-
-  <section class="section">
-    <h2>最近项目</h2>
-
-    <div class="card">
-      <h3><a href="projects/mini-http.html">mini-http-server</a></h3>
-      <span class="tag">C</span> <span class="tag">socket</span> <span class="tag">多线程</span>
-      <p>从零实现的HTTP服务器, 支持线程池和Keep-Alive。2026.06-07</p>
-    </div>
-
-    <div class="card">
-      <h3><a href="projects/mini-kvstore.html">mini-kvstore</a></h3>
-      <span class="tag">Python</span> <span class="tag">Raft</span> <span class="tag">分布式</span>
-      <p>基于Raft共识协议的分布式KV存储引擎。2026.07</p>
-    </div>
-
-    <div class="card">
-      <h3><a href="projects/mini-sql.html">mini-sql</a></h3>
-      <span class="tag">Python</span> <span class="tag">编译原理</span>
-      <p>手写SQL词法分析器+递归下降解析器+执行引擎。2026.07-08</p>
-    </div>
-
-    <div class="card">
-      <h3><a href="projects/cv-toolkit.html">cv-toolkit</a></h3>
-      <span class="tag">OpenCV</span> <span class="tag">CV</span>
-      <p>图像处理工具 + KNN分类器(纯numpy实现)。2026.08</p>
-    </div>
-  </section>
-
-  <section class="section">
-    <h2>最近文章</h2>
-    <div class="card">
-      <h3><a href="posts/tcp-http-server.html">用C写一个HTTP服务器是什么体验</a></h3>
-      <small>2026-07-15</small>
-      <p>记一下从零写HTTP服务器的经历和踩过的坑...</p>
-    </div>
-    <div class="card">
-      <h3><a href="posts/raft-notes.html">Raft论文阅读笔记</a></h3>
-      <small>2026-07-22</small>
-      <p>读Raft论文的一些理解和总结，选举+日志复制...</p>
-    </div>
-  </section>
-</main>
-
-<footer>
-  <p>Yang Guangyu. Powered by plain HTML/CSS.</p>
-</footer>
+<button id="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">TOP</button>
 
 <script src="js/app.js"></script>
 </body>

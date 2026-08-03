@@ -1,84 +1,51 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Raft论文阅读笔记 — YG Blog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Raft Notes — Posts</title>
 <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
-<nav class="navbar">
-  <div class="nav-inner">
-    <a href="../index.html" class="logo">YG</a>
-    <div class="nav-links">
-      <a href="../index.html">Home</a>
-      <a href="../projects/index.html">Projects</a>
-      <a href="index.html">Posts</a>
-      <a href="../about.html">About</a>
-      <button id="theme-toggle">Dark</button>
-    </div>
+<div class="screen-dust"></div>
+<div class="desk-surface"></div>
+<div class="page-nav">
+  <a href="../index.html">Desk</a>
+  <a href="../projects/index.html">Projects</a>
+  <a href="index.html">Posts</a>
+  <a href="../about.html">About</a>
+</div>
+<div class="page-container">
+  <a href="../index.html" class="back-to-desk">Back to Desk</a>
+  <div class="page-paper">
+    <h1>Raft Paper Reading Notes</h1>
+    <p class="page-meta">2026-07-22</p>
+    <p>Read Diego Ongaro's 2014 Raft paper alongside MIT 6.824. Much easier to understand than Paxos.</p>
+    <h2>Why consensus</h2>
+    <p>In distributed systems, multiple machines need consistent state. Master-slave replication works until the master fails. Consensus algorithms solve leader election without a central coordinator.</p>
+    <h2>Raft's three parts</h2>
+    <ul>
+      <li>Leader Election — elect one leader, all client requests go through it</li>
+      <li>Log Replication — leader replicates log entries to all followers</li>
+      <li>Safety — committed entries are never overwritten</li>
+    </ul>
+    <h2>Leader election (5.1-5.2)</h2>
+    <p>States: Follower (waiting for heartbeat), Candidate (campaigning), Leader (active). Randomized election timeout: 150-300ms per paper, I used 3-6s for easier debugging. Without randomness, elections deadlock when all nodes campaign simultaneously.</p>
+    <h2>Log replication (5.3)</h2>
+    <p>Heartbeats are empty AppendEntries RPCs. Flow: client sends command to leader, leader appends to local log, leader sends AppendEntries to followers, on majority ACK, leader commits and applies to state machine, leader notifies followers of new commitIndex.</p>
+    <h2>Safety (5.4)</h2>
+    <p><strong>5.4.1 Election restriction:</strong> candidate's log must be at least as up-to-date as majority, checked by comparing last log entry term and index.</p>
+    <p><strong>5.4.2 Commit rule:</strong> leader cannot commit entries from previous terms by counting replicas. This is the most subtle part. Without it, a committed entry could be overwritten by a new leader.</p>
+    <h2>Implementation bugs</h2>
+    <ul>
+      <li>Timeout too short (100ms): three-way election split, no winner</li>
+      <li>Missed term check: old leader ignores higher-term RPCs, keeps acting as leader</li>
+      <li>commitIndex boundary: forgot 5.4.2, committed data overwritten by new leader</li>
+    </ul>
+    <p><a href="https://github.com/KimserUM/mini-kvstore">Implementation on GitHub</a></p>
   </div>
-</nav>
-
-<main class="container post">
-  <h1>Raft论文阅读笔记</h1>
-  <p class="date">2026-07-22 · 约8分钟</p>
-
-  <p>
-    看了Diego Ongaro 2014年的Raft论文("In Search of an Understandable Consensus Algorithm"),
-    记一下理解。配合MIT 6.824的课程看的。
-  </p>
-
-  <h2>为什么需要共识算法</h2>
-  <p>
-    分布式系统中，多台机器要保持数据一致。最简单的方案是主从复制——所有写操作发给主节点，主节点同步给从节点。
-    但主节点挂了怎么办？这就是共识算法要解决的问题: 在没有中心节点的情况下, 多个节点如何就同一个值达成一致。
-  </p>
-
-  <h2>Raft的三个核心</h2>
-  <ul>
-    <li><strong>Leader Election</strong> — 选出一个Leader，由Leader处理所有客户端请求</li>
-    <li><strong>Log Replication</strong> — Leader把日志复制到所有Follower</li>
-    <li><strong>Safety</strong> — 保证已commit的日志不会被覆盖</li>
-  </ul>
-
-  <h2>Leader选举 (5.1-5.2节)</h2>
-  <p>每个节点有三种状态: Follower, Candidate, Leader。</p>
-  <ul>
-    <li>Follower: 一直等Leader的心跳。如果在选举超时时间内没收到心跳，变成Candidate</li>
-    <li>Candidate: 给自己term+1, 投自己一票, 然后向所有节点发RequestVote</li>
-    <li>如果获得过半票数: 变成Leader</li>
-    <li>如果收到更高term的消息: 退位变Follower</li>
-  </ul>
-  <p>关键设计: <strong>随机选举超时</strong>。论文建议150-300ms。如果不随机，多个节点同时超时变成Candidate，谁都拿不到过半票，系统永远选不出Leader。</p>
-
-  <h2>日志复制 (5.3节)</h2>
-  <p>Leader用AppendEntries RPC来同步日志。心跳就是空的AppendEntries。</p>
-  <p>复制流程:</p>
-  <ol>
-    <li>客户端发送命令给Leader</li>
-    <li>Leader把命令追加到自己的日志</li>
-    <li>Leader发AppendEntries给所有Follower</li>
-    <li>收到过半确认后, Leader commit这条日志, 应用到状态机</li>
-    <li>Leader在后续的AppendEntries中告诉Follower最新的commitIndex</li>
-  </ol>
-
-  <h2>Safety: 一些容易忽略的细节 (5.4节)</h2>
-  <p><strong>5.4.1 选举限制</strong>: Candidate的日志必须至少和大多数节点一样新, 才能当选。这个"新"是通过比较最后一条日志的term和index来判断的。</p>
-  <p><strong>5.4.2 只commit当前term的日志</strong>: Leader不能通过统计副本数来提交之前term的日志。这个真的很容易漏掉! 如果不加这个限制, 一个已commit的日志可能在新的Leader上任后被覆盖。</p>
-
-  <h2>实际实现时踩的坑</h2>
-  <ul>
-    <li>选举超时设太短(100ms): 三个节点同时变成Candidate, 选举分裂, 永远选不出来</li>
-    <li>收到RPC没检查term: 旧Leader收到更高term的消息后还自以为自己是Leader</li>
-    <li>commitIndex的边界: 忘了5.4.2的规则, 导致已commit数据在新Leader上任后被覆盖</li>
-  </ul>
-  <p>实现代码: <a href="https://github.com/KimserUM/mini-kvstore">github.com/KimserUM/mini-kvstore</a></p>
-</main>
-
-<footer>
-  <p>Yang Guangyu. Powered by plain HTML/CSS</p>
-</footer>
+</div>
+<button id="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">TOP</button>
 <script src="../js/app.js"></script>
 </body>
 </html>
