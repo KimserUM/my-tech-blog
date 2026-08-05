@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>debate-agents — 项目</title>
+<title>debate-agents -- 项目</title>
 <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
@@ -19,51 +19,57 @@
   <a href="../index.html" class="back-to-desk">返回桌面</a>
   <div class="page-paper">
     <h1>debate-agents</h1>
-    <p class="page-meta">Python | Agent | prompt工程 | 纯标准库 | ~450行 | 2026.08</p>
+    <p class="page-meta">Python | Agent | prompt engineering | stdlib only | ~450行 | 2026.08</p>
 
     <h2>项目简介</h2>
-    <p>多Agent辩论系统。三个角色(方案提出者、批评者、裁判)围绕用户提出的话题进行辩论，裁判在听取双方论点后给出最终裁决。纯标准库实现，零pip依赖。</p>
+    <p>多Agent辩论系统。3个role(Proposer/Critic/Judge)围绕topic进行debate，Judge听取双方argument后给出final verdict。纯标准库，零pip dependency。</p>
 
-    <h2>怎么工作的</h2>
-    <pre><code>用户提出话题
+    <h2>work流程</h2>
+    <pre><code>用户提出topic
     |
     v
-[方案提出者] 分析问题, 提出2-3个方案
+[Proposer] 分析问题, 提出2-3个proposal
     |
     v
-[批评者] 找漏洞, 质疑假设, 指出风险
+[Critic] 找漏洞, 质疑assumption, 指出risk
     |
     v
-[方案提出者] 回应质疑, 修正方案    (可多轮)
+[Proposer] 回应质疑, 修正方案    (可multi-round)
     |
     v
-[裁判] 听取双方, 给出最终裁决</code></pre>
+[Judge] 听取双方, 给出最终verdict</code></pre>
 
     <h2>架构</h2>
-    <pre><code>main.py      入口, 命令行参数解析
-llm.py       LLM客户端(urllib直连OpenAI兼容API)
-agent.py     Agent类 + 角色配置 + 对话历史管理
-debate.py    辩论协调器(发言顺序控制)</code></pre>
+    <pre><code>main.py        CLI入口 + arg parsing
+llm.py         LLM client (urllib直连OpenAI compatible API)
+mock_llm.py    Mock LLM (预设回复, demo用, 不花钱)
+agent.py       Agent类 + role config + history管理
+debate.py      Coordinator (发言顺序 + round控制)</code></pre>
 
-    <h2>三个角色</h2>
+    <h2>三个Role</h2>
     <table>
-      <tr><th>角色</th><th>人格设定</th></tr>
-      <tr><td>方案提出者</td><td>创意十足的问题解决者。深入分析, 提出2-3个方案, 说明优缺点, 用数据和逻辑支撑论点</td></tr>
-      <tr><td>批评者</td><td>严谨的批判性思考者。找漏洞和风险, 质疑假设, 指出未考虑的边界情况</td></tr>
-      <tr><td>裁判</td><td>公正的裁判。综合双方观点, 给出最优方案, 说明为什么以及实施注意事项</td></tr>
+      <tr><th>Role</th><th>Personality设定</th></tr>
+      <tr><td>Proposer</td><td>creative problem solver。深入分析, 提出2-3个proposal, 说明trade-off, 用data和logic支撑论点</td></tr>
+      <tr><td>Critic</td><td>rigorous critical thinker。找漏洞和risk, 质疑assumption, 指出未考虑的edge case</td></tr>
+      <tr><td>Judge</td><td>公正的裁判。综合双方argument, 给出最优方案, 说明why以及implementation注意事项</td></tr>
     </table>
 
     <h2>怎么跑</h2>
-    <pre><code>export OPENAI_API_KEY=sk-xxx
-python -m src.main --topic "微服务还是单体架构?"
-python -m src.main --topic "要不要学Rust" --rounds 3</code></pre>
+    <pre><code># mock mode, 不需要API key
+python -m src.main --topic "要不要学Rust" --mock
+
+# 真调API
+export OPENAI_API_KEY=sk-xxx
+python -m src.main --topic "微服务还是单体?" --rounds 3
+python -m src.main --topic "..." --mock --output debate.txt</code></pre>
 
     <h2>实现细节</h2>
     <ul>
-      <li>每个Agent独立维护对话历史, 通过hear()接收别人发言, speak()生成自己的发言</li>
-      <li>协调器控制发言顺序: proposer -> critic -> proposer -> critic -> judge</li>
-      <li>LLM客户端用urllib直连OpenAI兼容API, 不依赖openai/httpx等第三方包</li>
-      <li>角色人格全部通过system prompt设定, 没有硬编码行为逻辑</li>
+      <li>每个Agent独立维护conversation history, hear()接收别人speak, speak()生成自己发言</li>
+      <li>Coordinator控制发言顺序: proposer -> critic -> proposer -> critic -> judge</li>
+      <li>LLM client用urllib直连OpenAI compatible API, 不依赖openai/httpx等第三方package</li>
+      <li>Role personality全部通过system prompt设定, 没有hardcode行为逻辑</li>
+      <li>Mock mode用预设reply模板, 演示完整debate流程不需要花API费用</li>
     </ul>
 
     <p>源代码: <a href="https://github.com/KimserUM/debate-agents">github.com/KimserUM/debate-agents</a></p>
