@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>debate-agents 开发记录 -- 文章</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div class="screen-dust"></div>
+<div class="desk-surface"></div>
+<div class="page-nav">
+  <a href="../index.html">桌面</a>
+  <a href="../projects/index.html">项目</a>
+  <a href="index.html">文章</a>
+  <a href="../about.html">关于</a>
+</div>
+<div class="page-container">
+  <a href="../index.html" class="back-to-desk">返回桌面</a>
+  <div class="page-paper">
+    <h1>写一个多Agent辩论系统的过程记录</h1>
+    <p class="page-meta">2026-08-05</p>
+
+    <h2>想法</h2>
+    <p>Agent是一个很火的方向。之前做的几个项目(Raft KV store、mini-sql)都是传统CS方向, 想做点AI相关的。LLM本身是黑盒, 但Agent=LLM+自主决策, 这个组合很有意思。</p>
+    <p>辩论系统是最简单的多Agent场景: 三个role各说各的, 不需要外部tool, 不需要RAG, 不需要复杂planning。纯prompt engineering就能跑。</p>
+
+    <h2>Day 1: 核心架构</h2>
+    <p>先搭了四个文件: llm.py (LLM client), agent.py (Agent class + role config), debate.py (coordinator), main.py (CLI entry)。</p>
+    <p>LLM client用urllib直连OpenAI compatible API, 不依赖任何第三方SDK。这个决策省了很多pip install的麻烦 - 只要环境变量设置了API key就能跑。</p>
+    <p>Agent class的设计比较简单: 每个Agent有自己的system prompt(定义role personality)和conversation history。hear()听别人发言, speak()生成自己的发言。</p>
+    <p>Coordinator控制发言顺序: proposer -> critic -> proposer -> critic -> judge。默认两轮, --rounds参数可以调。</p>
+    <p>写了mock_llm.py, 用预设回复模拟LLM输出, 这样不需要API key也能跑demo。这个在调试时特别有用, 不用每次改代码都花钱调API。</p>
+
+    <h2>Day 2: 自定义role和统计</h2>
+    <p>加了两个功能: JSON配置文件和debate统计。</p>
+    <p>config.py让用户可以自定义三个role的personality。比如可以把critic换成安全专家, 从security角度挑刺。配置文件是JSON格式, 只写两个role也行, 第三个自动补默认值。</p>
+    <p>stats.py追踪整场debate的数据: 每个speaker的发言次数、总字数、平均字数、verdict长度、总耗时。这些数据存下来以后可以分析不同prompt的效果。</p>
+
+    <h2>技术要点</h2>
+    <ul>
+      <li>纯标准库(urllib + json + argparse), 零pip依赖 - 这个对展示项目很重要, 谁都能clone下来跑</li>
+      <li>OpenAI compatible API - 不仅支持OpenAI, 任何兼容的API(vLLM, Ollama, 国内各种proxy)都能用</li>
+      <li>system prompt engineering - role personality完全通过prompt控制, 没有hardcode行为逻辑</li>
+      <li>mock模式 - 预设回复模板, 演示效果不需要花API费用</li>
+    </ul>
+
+    <h2>还可以做什么</h2>
+    <ul>
+      <li>streaming输出 - 目前是等LLM全部返回再显示, 改成实时流式输出体验会好很多</li>
+      <li>更多debate模式 - 除了三角色辩论, 还可以做panel discussion(N个专家+1个主持人)</li>
+      <li>API integration - 让Agent在辩论时可以调用搜索工具查实时数据, 真正变成Agent</li>
+    </ul>
+
+    <p>代码: <a href="https://github.com/KimserUM/debate-agents">github.com/KimserUM/debate-agents</a></p>
+  </div>
+</div>
+<button id="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">TOP</button>
+<script src="../js/app.js"></script>
+</body>
+</html>
