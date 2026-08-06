@@ -60,7 +60,13 @@ python -m src.main --topic "要不要学Rust" --mock
 
 # 真调API
 export OPENAI_API_KEY=sk-xxx
-python -m src.main --topic "微服务还是单体?" --rounds 3
+python -m src.main --topic "微服务还是单体?" --rounds 3 --stats
+
+# 自定义role
+python -m src.main --init-config roles.json   # 导出配置模板
+python -m src.main --topic "..." --config roles.json --mock
+
+# 导出debate记录
 python -m src.main --topic "..." --mock --output debate.txt</code></pre>
 
     <h2>实现细节</h2>
